@@ -30,20 +30,23 @@ async function done(teamWinner) {
       var name = betters[i]['name'];
       var bet = betters[i]['bet'];
       var teamBet = betters[i]['team'];
-      var credits = await getCredits(name);
+      var betterInfo = await readFromDb("users", {'name': name});
+      var credits = betterInfo[0]['credits'];
       if (teamBet == teamWinner) {
         var sum = bet / winnerPool * loserPool;
         updateDb("users", {
           'name': name
         }, {
-          'credits': credits + sum
+          'credits': credits + sum,
+          'wins': betterInfo[0]['wins'] + 1
         })
         //client.whisper(name, `You won ${sum} credits!`)
       } else {
         updateDb("users", {
           'name': name
         }, {
-          'credits': credits - bet
+          'credits': credits - bet,
+          'losses': betterInfo[0]['losses'] + 1
         });
         //client.whisper(name, `You lost ${bet} credits.`)
       }
