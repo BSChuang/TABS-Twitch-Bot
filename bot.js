@@ -10,6 +10,9 @@ const tb = {
   'blue': false,
   'BLUE': false
 }
+const units = [
+  'clubber', 'protector', 'spear_thrower', 'stoner', 'bone_mage', 'chieftain', 'mammoth', 'halfling', 'farmer', 'potionseller', 'harvester', 'wheelbarrow', 'scarecrow'
+]
 // BOT FUNCTIONS
 function rollDice() {
   const sides = 6;
@@ -30,7 +33,9 @@ async function done(teamWinner) {
       var name = betters[i]['name'];
       var bet = betters[i]['bet'];
       var teamBet = betters[i]['team'];
-      var betterInfo = await readFromDb("users", {'name': name});
+      var betterInfo = await readFromDb("users", {
+        'name': name
+      });
       var credits = betterInfo[0]['credits'];
       if (teamBet == teamWinner) {
         var sum = bet / winnerPool * loserPool;
@@ -59,10 +64,41 @@ async function done(teamWinner) {
   } else {
     client.say('#chil_ttv', 'One team was not bet on. No credits given!')
   }
+}
 
+async function addBattle(name, reds, blues) {
+  var redDict = createTeam(reds);
+  var blueDict = createTeam(blues);
+
+  if (redDict == null || blueDict == null) {
+    return new Promise(resolve => {
+      resolve(`@${name}, your battle was formatted incorrectly`);
+    });
+  }
+
+  updateWrite("battles", {'name': name}, {'red': redDict, 'blue': blueDict})
+}
+
+function createTeam(team) { //clubber:5,protector:3
+  var dict = {};
+  var arr = team.split(",");
+  arr.forEach(ele => {
+    var split = ele.split(":");
+    if (!units.includes(split[0]) || isNaN(split[1]) || parseInt(split[1]) < 1) {
+      return null;
+    }
+    dict[split[0]] = parseInt(split[1]);
+  })
+
+  return dict;
 }
 
 async function bet(name, bet, team) {
+  if (battling) {
+    return new Promise(resolve => {
+      resolve(`@${username}, you cannot bet mid-battle!`);
+    });
+  }
   if (bet == null && team == null) {
     var credits = await readFromDb("bets", {
       'name': name
@@ -193,6 +229,21 @@ function updateDb(coll, doc, dict) {
   });
 }
 
+async function updateWrite(coll, doc, dict) {
+  MongoClient.connect(uri, function (err, monclient) {
+    if (err) {
+      console.log('Error occurred while connecting to MongoDB Atlas...\n', err);
+    } else {
+      monclient.db("TABS").collection(coll).updateOne(doc, dict, {upsert: true}, function (err, res) {
+        if (err) {
+          console.log('Error occurred while making account\n', err);
+        }
+      });
+      monclient.close();
+    }
+  });
+}
+
 async function readFromDb(coll, dict) {
   return new Promise(resolve => {
     MongoClient.connect(uri, function (err, monclient) {
@@ -282,12 +333,12 @@ async function onMessageHandler(target, context, msg, self) {
 
       break;
     case "!bet":
-      if (battling) {
-        client.say(target, `@${username}, you cannot bet mid-battle!`);
-      } else {
-        var response = await bet(username, commandName[1], commandName[2]);
-        client.say(target, response);
-      }
+      var response = await bet(username, commandName[1], commandName[2]);
+      client.say(target, response);
+      break;
+    case "!battle": // "!battle clubber:5 clubber:10"
+      var response = await addBattle(username, commandName[1], commandName[2]);
+      client.say(target, response);
       break;
   }
 }
