@@ -1,26 +1,21 @@
 const tmi = require('tmi.js');
-const MongoClient = require('mongodb').MongoClient;
+//const https = require('https');
+var XMLHttpRequest = require('xhr').XMLHttpRequest;
+//const MongoClient = require('mongodb').MongoClient;
 const cfg = require('./cfg');
 const game = require('./tabs');
 const uri = `mongodb+srv://${cfg.getDbUser()}:${cfg.getDbToken()}@tabs-hoskn.mongodb.net/test?retryWrites=true`;
 
-var battling;
 var bets = {};
 var suggested = {};
 var votes = {};
-var battle = {};
-const tb = {
-  'red': true,
-  'RED': true,
-  'blue': false,
-  'BLUE': false
-}
+
 const units = [
   'clubber', 'protector', 'spear_thrower', 'stoner', 'bone_mage', 'chieftain', 'mammoth',
   'halfling', 'farmer', 'potionseller', 'harvester', 'wheelbarrow', 'scarecrow',
   'bard', 'squire', 'archer', 'priest', 'knight', 'catapult', 'the_king',
   'sarissa', 'shield_bearer', 'hoplite', 'snake_archer', 'ballista', 'minotaur', 'zeus',
-  'headbutter', 'ice_archer', 'brawler', 'berseker', 'valkyrie', 'jarl', 'longship'
+  'headbutter', 'ice_archer', 'brawler', 'berserker', 'valkyrie', 'jarl', 'longship'
 ]
 
 
@@ -98,7 +93,7 @@ function betSum() {
   var reds = 0;
   var blues = 0;
   betters.forEach(name => {
-    (bets[name]['team']) ? (reds += bets[name]['bet']) : (blues += bets[name]['bet']);
+    (bets[name]['team'] == "red") ? (reds += bets[name]['bet']) : (blues += bets[name]['bet']);
   });
   return [reds, blues];
 }
@@ -380,6 +375,7 @@ async function standing(name) {
   })
 }
 
+// 
 const opts = {
   identity: {
     username: cfg.getTwitchUser(),
@@ -405,7 +401,8 @@ client.on('connected', onConnectedHandler);
 client.connect();
 
 client.on('connected', (address, port) => {
-  //client.action('chil_ttv', 'hello');
+  client.action('chil_ttv', 'hello');
+  test();
 });
 
 // Called every time the bot connects to Twitch chat
@@ -472,13 +469,12 @@ var voteLen = 16;
 var betLen = 16;
 var battleLen = 241;
 var timer = suggestLen;
-var state = "suggest";
+var state;
 
 function update() {
   switch (state) {
     case "suggest":
       if (timer <= 0) {
-
         if (Object.keys(suggested).length == 0) {
           timer = suggestLen;
           client.say('#chil_ttv', `No suggestions given! Restarting suggestion phase.`);
@@ -525,7 +521,7 @@ function update() {
       } else if (timer == 60 || timer == 30 || timer == 10 || timer <= 3) {
         client.say('#chil_ttv', `${timer} seconds left until draw!`);
       }
-      if (timer % 3) {
+      if (timer < 238 && timer % 3) {
         var winner = game.checkDone();
         if (winner != null) {
           done(winner);
@@ -538,4 +534,5 @@ function update() {
   timer--;
 }
 
+state = "suggest";
 setInterval(update, 1000);

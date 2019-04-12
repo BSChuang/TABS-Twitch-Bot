@@ -12,7 +12,7 @@ function randPos(dict) {
 
 function moveClick(x, y) {
     robot.moveMouse(x, y);
-    robot.mouseClick();
+    robot.mouseClick("left", true);
 }
 
 var cats = {
@@ -20,7 +20,7 @@ var cats = {
     'cat2': [820, 'halfling', 'farmer', 'hay_baler', 'potionseller', 'harvester', 'wheelbarrow', 'scarecrow'],
     'cat3': [880, 'bard', 'squire', 'archer', 'priest', 'knight', 'catapult', 'the_king'],
     'cat4': [940, 'sarissa', 'shield_bearer', 'hoplite', 'snake_archer', 'ballista', 'minotaur', 'zeus'],
-    'cat5': [1000, 'headbutter', 'ice_archer', 'brawler', 'berseker', 'valkyrie', 'jarl', 'longship']
+    'cat5': [1000, 'headbutter', 'ice_archer', 'brawler', 'berserker', 'valkyrie', 'jarl', 'longship']
 }
 
 var typePosX = {
@@ -83,6 +83,7 @@ exports.startBattle = function () {
 }
 
 exports.drawBattle = function (battle) {
+    robot.setMouseDelay(20);
     clearBattle();
     make(true, battle['red']);
     make(false, battle['blue']);
