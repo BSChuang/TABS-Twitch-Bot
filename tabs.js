@@ -1,43 +1,7 @@
-const tmi = require('tmi.js');
-const cfg = require('./cfg');
 const fs = require('fs');
 const PNG = require('pngjs').PNG;
 const pixelmatch = require('pixelmatch');
 const robot = require('robotjs');
-const opts = {
-    identity: {
-        username: cfg.getTwitchUser(),
-        password: cfg.getTwitchToken()
-    },
-    connection: {
-        cluster: 'aws',
-        reconnect: true,
-    },
-    channels: [
-        cfg.getTwitchChannel()
-    ]
-};
-
-// Create a client with our options
-const client = new tmi.client(opts);
-
-// Register our event handlers (defined below)
-client.on('message', onMessageHandler);
-client.on('connected', onConnectedHandler);
-
-// Connect to Twitch:
-client.connect();
-
-client.on('connected', (address, port) => {
-    client.action('chil_ttv', 'hello');
-});
-
-async function onMessageHandler(target, context, msg, self) {}
-
-// Called every time the bot connects to Twitch chat
-function onConnectedHandler(addr, port) {
-    console.log(`* Connected to ${addr}:${port}`);
-}
 
 function randPos(dict) {
     // Todo, check if random position has been chosen before
@@ -52,42 +16,35 @@ function moveClick(x, y) {
 }
 
 var cats = {
-    'cat1': [813, 'clubber', 'protector', 'spear_thrower', 'stoner', 'bone_mage', 'chieftain', 'mammoth'],
-    'cat2': [873, 'halfling', 'farmer', 'potionseller', 'harvester', 'wheelbarrow', 'scarecrow'],
-    'cat3': 933,
-    'cat4': 993,
-    'cat5': 1053
+    'cat1': [760, 'clubber', 'protector', 'spear_thrower', 'stoner', 'bone_mage', 'chieftain', 'mammoth'],
+    'cat2': [820, 'halfling', 'farmer', 'hay_baler', 'potionseller', 'harvester', 'wheelbarrow', 'scarecrow'],
+    'cat3': [880, 'bard', 'squire', 'archer', 'priest', 'knight', 'catapult', 'the_king'],
+    'cat4': [940, 'sarissa', 'shield_bearer', 'hoplite', 'snake_archer', 'ballista', 'minotaur', 'zeus'],
+    'cat5': [1000, 'headbutter', 'ice_archer', 'brawler', 'berseker', 'valkyrie', 'jarl', 'longship']
 }
 
 var typePosX = {
-    1: 666,
-    2: 786,
-    3: 906,
-    4: 1026,
-    5: 1146,
-    6: 1266,
-    7: 1386
+    1: 625,
+    2: 735,
+    3: 845,
+    4: 955,
+    5: 1065,
+    6: 1175,
+    7: 1285
 }
 
 var redBounds = {
-    'lx': 110,
-    'ux': 860,
-    'ly': 120,
-    'uy': 900
+    'lx': 60,
+    'ux': 900,
+    'ly': 110,
+    'uy': 880
 };
 var blueBounds = {
-    'lx': 1334,
-    'ux': 1884,
-    'ly': 120,
-    'uy': 900
+    'lx': 1020,
+    'ux': 1860,
+    'ly': 110,
+    'uy': 880
 };
-var reds = {
-    'clubber': 15
-};
-var blues = {
-    'clubber': 5,
-    'harvester': 5
-}
 
 function make(teamBool, team) {
     Object.keys(team).forEach(type => {
@@ -110,8 +67,8 @@ function make(teamBool, team) {
             }
         });
 
-        moveClick(categoryPos, 1020);
-        moveClick(typePos, 1100)
+        moveClick(categoryPos, 950); // category y
+        moveClick(typePos, 1025) // type y
 
         // Clicking the right amount of times
         for (var _ = 0; _ < team[type]; _++) {
@@ -121,21 +78,56 @@ function make(teamBool, team) {
     });
 }
 
-function drawBattle() {
+exports.startBattle = function () {
+    moveClick(960, 40);
+}
+
+exports.drawBattle = function (battle) {
     clearBattle();
-    make(true, reds);
-    make(false, blues);
+    make(true, battle['red']);
+    make(false, battle['blue']);
 }
 
 function clearBattle() {
-    moveClick(850, 25);
-    moveClick(1200, 25);
+    moveClick(800, 25);
+    moveClick(1100, 25);
+}
+
+var winner = -1;
+exports.checkDone = function() {
+    if (winner == -1) {
+        if (robot.getPixelColor(1, 130) == '161c26') {
+            setTimeout(checkWinner, 2000);
+        }
+        return null;
+    } else {
+        var tempWinner = winner;
+        winner = -1;
+        return tempWinner;
+    }
+}
+
+function checkWinner() {
+    if (winner == -1) {
+        if (robot.getPixelColor(630, 93) == "ffffff") {
+            winner = 0;
+        } else {
+            winner = 1;
+        }
+        robot.keyTap('tab');
+    }
 }
 
 function getPos() {
+    console.log(robot.getPixelColor(robot.getMousePos().x, robot.getMousePos().y - 10));
     console.log(robot.getMousePos());
 }
 
+function update() {
+    console.log(checkDone());
+}
 
-drawBattle();
+//drawBattle();
+//setInterval(getPos, 500);
+//setInterval(update, 3000);
 //setInterval(getPos, 500);
