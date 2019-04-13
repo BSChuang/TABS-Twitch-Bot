@@ -1,40 +1,69 @@
+const https = require('https');
 const tmi = require('tmi.js');
-//const https = require('https');
-var XMLHttpRequest = require('xhr').XMLHttpRequest;
-//const MongoClient = require('mongodb').MongoClient;
 const cfg = require('./cfg');
 const game = require('./tabs');
+const MongoClient = require('mongodb').MongoClient;
 const uri = `mongodb+srv://${cfg.getDbUser()}:${cfg.getDbToken()}@tabs-hoskn.mongodb.net/test?retryWrites=true`;
 
 var bets = {};
 var suggested = {};
 var votes = {};
+var odds;
 
-const units = [
-  'clubber', 'protector', 'spear_thrower', 'stoner', 'bone_mage', 'chieftain', 'mammoth',
-  'halfling', 'farmer', 'potionseller', 'harvester', 'wheelbarrow', 'scarecrow',
-  'bard', 'squire', 'archer', 'priest', 'knight', 'catapult', 'the_king',
-  'sarissa', 'shield_bearer', 'hoplite', 'snake_archer', 'ballista', 'minotaur', 'zeus',
-  'headbutter', 'ice_archer', 'brawler', 'berserker', 'valkyrie', 'jarl', 'longship'
-]
-
-
-function vote(name, votee) {
-  var response = "";
-  if (votee == null) {
-    Object.keys(suggested).forEach(suggester => {
-      response += `${suggester}: ${suggestionToString(suggester)}\n`;
-    })
-  } else {
-    if (Object.keys(suggested).includes(votee)) {
-      votes[name] = votee;
-      response = `@${name}, you have voted for ${votee}.`;
-    } else {
-      response = `@${name}, invalid name.`;
-    }
-  }
-  return response;
+const units = {
+  'clubber': 60,
+  'protector': 80,
+  'spear_thrower': 120,
+  'stoner': 160,
+  'bone_mage': 300,
+  'chieftain': 400,
+  'mammoth': 2230,
+  'halfling': 60,
+  'farmer': 80,
+  'hay_baler': 140,
+  'potionseller': 240,
+  'harvester': 490,
+  'wheelbarrow': 1000,
+  'scarecrow': 1200,
+  'bard': 60,
+  'squire': 100,
+  'archer': 140,
+  'priest': 180,
+  'knight': 900,
+  'catapult': 1050,
+  'the_king': 1400,
+  'sarissa': 90,
+  'shield_bearer': 100,
+  'hoplite': 180,
+  'snake_archer': 340,
+  'ballista': 950,
+  'minotaur': 1520,
+  'zeus': 2000,
+  'headbutter': 90,
+  'ice_archer': 160,
+  'brawler': 220,
+  'berserker': 240,
+  'valkyrie': 500,
+  'jarl': 850,
+  'longship': 1000
 }
+
+  function vote(name, votee) {
+    var response = "";
+    if (votee == null) {
+      Object.keys(suggested).forEach(suggester => {
+        response += `${suggester}: ${suggestionToString(suggester)}\n`;
+      })
+    } else {
+      if (Object.keys(suggested).includes(votee)) {
+        votes[name] = votee;
+        response = `@${name}, you have voted for ${votee}.`;
+      } else {
+        response = `@${name}, invalid name.`;
+      }
+    }
+    return response;
+  }
 
 function chooseSuggestion() {
   var winner;
@@ -47,8 +76,44 @@ function chooseSuggestion() {
   return suggested[winner];
 }
 
-async function done(teamWinner) {
+async function done(teamWinner) { // bet / win% 
+  client.say('#chil_ttv', `${teamWinner ? 'RED' : 'BLUE'} TEAM WINS`)
+
+  // Odds based
+  /* odds = (teamWinner ? odds[0]/odds[1] : odds[1]/odds[0]);
   var betters = Object.keys(bets);
+  for (var i = 0; i < betters.length; i++) {
+    var name = betters[i];
+    var bet = bets[name]['bet'];
+    var teamBet = bets[name]['team'];
+    var betterInfo = await readFromDb("users", {
+      'name': name
+    });
+    var credits = betterInfo[0]['credits'];
+    console.log(teamBet);
+    if ((teamWinner ? 'red' : 'blue') == teamBet) {
+      console.log(odds);
+      var sum = bet / odds;
+      client.say('#chil_ttv', `!addpoints ${name} ${Math.ceil(sum/10)}`)
+      client.whisper(name, `You won ${sum} credits!`)
+      updateDb("users", {
+        'name': name
+      }, {
+        'credits': credits + sum,
+        'wins': betterInfo[0]['wins'] + 1
+      })
+    } else {
+      client.whisper(name, `You lost ${bet} credits.`)
+      updateDb("users", {
+        'name': name
+      }, {
+        'credits': credits - bet,
+        'losses': betterInfo[0]['losses'] + 1
+      });
+    }
+  } */
+
+  // Pool based
   var sum = betSum();
   var reds = sum[0];
   var blues = sum[1];
@@ -56,14 +121,16 @@ async function done(teamWinner) {
     var winnerPool = teamWinner ? reds : blues;
     var loserPool = teamWinner ? blues : reds;
     for (var i = 0; i < betters.length; i++) {
-      var bet = bets[betters[i]]['bet'];
-      var teamBet = bets[betters[i]]['team'];
+      var name = betters[i];
+      var bet = bets[name]['bet'];
+      var teamBet = bets[name]['team'];
       var betterInfo = await readFromDb("users", {
         'name': name
       });
       var credits = betterInfo[0]['credits'];
-      if (teamBet == teamWinner) {
+      if (teamBet == (teamWinner ? 'red' : 'blue')) {
         var sum = bet / winnerPool * loserPool;
+        client.say('#chil_ttv', `!addpoints ${name} ${Math.ceil(sum/10)}`)
         updateDb("users", {
           'name': name
         }, {
@@ -86,6 +153,12 @@ async function done(teamWinner) {
     client.say('#chil_ttv', 'One team was not bet on. No credits given!')
   }
   bets = {};
+
+  getAllViewers(function (viewers) {
+    viewers.forEach(viewer => {
+      addCredits(viewer, 10);
+    })
+  })
 }
 
 function betSum() {
@@ -128,7 +201,7 @@ function createTeam(team) { //clubber:5,protector:3
   var total = 0;
   for (var i = 0; i < arr.length; i++) {
     var split = arr[i].split(":");
-    if (!units.includes(split[0]) || isNaN(split[1]) || parseInt(split[1]) < 1 || parseInt(split[1]) > 100) {
+    if (!Object.keys(units).includes(split[0]) || isNaN(split[1]) || parseInt(split[1]) < 1 || parseInt(split[1]) > 100) {
       return null;
     }
     dict[split[0]] = parseInt(split[1]);
@@ -170,9 +243,9 @@ async function bet(name, bet, team) {
     }
   }
 
-  if (isNaN(bet)) {
+  if (isNaN(bet) && parseInt(bet)) {
     return new Promise(resolve => {
-      resolve(`@${name}, you must include a bet amount!`);
+      resolve(`@${name}, you must include a valid bet!`);
     });
   }
 
@@ -216,6 +289,20 @@ async function bet(name, bet, team) {
   });
 }
 
+function oddsBattle(battle) {
+  var redOdds = 0;
+  var blueOdds = 0;
+  Object.keys(battle['red']).forEach(unit => {
+    redOdds += units[unit] * battle['red'][unit];
+  });
+
+  Object.keys(battle['blue']).forEach(unit => {
+    blueOdds += units[unit] * battle['blue'][unit];
+  });
+
+  return [redOdds, blueOdds];
+}
+
 async function getCredits(name) {
   var info = await readFromDb("users", {
     'name': name
@@ -235,8 +322,19 @@ async function getCredits(name) {
       resolve(parseInt(info[0]['credits']));
     })
   }
+}
 
-
+async function addCredits(name, credits) {
+  var info = await readFromDb("users", {
+    'name': name
+  });
+  if (info[0] != null) {
+    updateDb("users", {
+      'name': name
+    }, {
+      'credits': parseInt(info[0]['credits']) + credits
+    })
+  }
 }
 
 function writeToDb(coll, dict) {
@@ -308,71 +406,26 @@ async function readFromDb(coll, dict) {
   })
 }
 
-function deleteDb(coll, doc) {
-  MongoClient.connect(uri, function (err, monclient) {
-    if (err) {
-      console.log('Error occurred while connecting to MongoDB Atlas...\n', err);
-    } else {
-      monclient.db("TABS").collection(coll).deleteOne(doc, function (err, res) {
-        if (err) {
-          console.log('Error occurred while making account\n', err);
-        }
-      });
-      monclient.close();
-    }
+function getAllViewers(callback) {
+  var result;
+  https.get('https://tmi.twitch.tv/group/user/chil_ttv/chatters', (resp) => {
+    let data = '';
+
+    // A chunk of data has been recieved.
+    resp.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    // The whole response has been received. Print out the result.
+    resp.on('end', () => {
+      var res = JSON.parse(data);
+      result = res['chatters']['viewers']
+      callback(result);
+    });
+
+  }).on("error", (err) => {
+    console.log("Error: " + err.message);
   });
-}
-
-async function leaderboard() {
-  return new Promise(resolve => {
-    MongoClient.connect(uri, function (err, monclient) {
-      if (err) {
-        console.log('Error occurred while connecting to MongoDB Atlas...\n', err);
-      } else {
-        monclient.db("TABS").collection("users").find().sort({
-          'credits': -1
-        }).toArray(function (err2, res) {
-          if (err2) {
-            console.log('Error occurred while making account\n', err2);
-          } else {
-            var len = res.length < 5 ? res.length : 5;
-            var response = "";
-            for (var i = 0; i < len; i++) {
-              response += `${i+1}: ${res[i]['name']} with ${res[i]['credits']} credits | `;
-            }
-            resolve(response.substring(0, response.length - 2));
-          }
-        })
-      }
-    });
-  })
-}
-
-async function standing(name) {
-  return new Promise(resolve => {
-    MongoClient.connect(uri, function (err, monclient) {
-      if (err) {
-        console.log('Error occurred while connecting to MongoDB Atlas...\n', err);
-      } else {
-        monclient.db("TABS").collection("users").find().sort({
-          'credits': -1
-        }).toArray(function (err2, res) {
-          if (err2) {
-            console.log('Error occurred while making account\n', err2);
-          } else {
-            var response = "";
-            for (var i = 0; i < res.length; i++) {
-              if (res[i]['name'] == name) {
-                response = `@${name}, you are ${i+1} out of ${res.length} betters with ${res[i]['credits']} credits.`;
-                break;
-              }
-            }
-            resolve(response);
-          }
-        })
-      }
-    });
-  })
 }
 
 // 
@@ -401,8 +454,7 @@ client.on('connected', onConnectedHandler);
 client.connect();
 
 client.on('connected', (address, port) => {
-  client.action('chil_ttv', 'hello');
-  test();
+  //client.action('chil_ttv', 'hello');
 });
 
 // Called every time the bot connects to Twitch chat
@@ -411,21 +463,11 @@ function onConnectedHandler(addr, port) {
 }
 
 async function onMessageHandler(target, context, msg, self) {
-  if (self) {
-    return;
-  }
   var username = context['username'];
+  msg = msg.toLowerCase();
   const commandName = msg.trim().split(" ");
 
   switch (commandName[0]) {
-    case "!leaderboard":
-      var response = await leaderboard(username);
-      client.say(target, response);
-      break;
-    case "!standing":
-      var response = await standing(username);
-      client.say(target, response);
-      break;
     case "!credits":
       var credits = await getCredits(username);
       if (credits == null) {
@@ -464,9 +506,9 @@ async function onMessageHandler(target, context, msg, self) {
   }
 }
 
-var suggestLen = 31;
-var voteLen = 16;
-var betLen = 16;
+var suggestLen = 15;
+var voteLen = 5;
+var betLen = 10;
 var battleLen = 241;
 var timer = suggestLen;
 var state;
@@ -478,6 +520,17 @@ function update() {
         if (Object.keys(suggested).length == 0) {
           timer = suggestLen;
           client.say('#chil_ttv', `No suggestions given! Restarting suggestion phase.`);
+          if (Object.keys(suggested).length > 5) {
+            var temp = {};
+            for (var i = 0; i < 5; i++) {
+              var list = Object.keys(suggested);
+              var key = list[Math.floor(Math.random() * Object.keys(suggested).length)];
+              temp[key] = suggested[key];
+              delete suggested[key];
+            }
+            suggested = temp;
+          }
+          
         } else {
           timer = voteLen;
           state = "vote";
@@ -495,7 +548,11 @@ function update() {
       if (timer <= 0) {
         timer = betLen;
         state = "bet";
-        game.drawBattle(chooseSuggestion());
+        var battle = chooseSuggestion();
+        odds = oddsBattle(battle);
+        var gcd = gcd_rec(odds[0], odds[1]);
+        game.drawBattle(battle);
+        client.say('#chil_ttv', `Odds: ${odds[0]/gcd} red to ${odds[1]/gcd} blue.`)
         suggested = {};
       } else if (timer == 15 || timer <= 3) {
         client.say('#chil_ttv', `${timer} seconds left to vote!`);
@@ -505,8 +562,6 @@ function update() {
       if (timer <= 0) {
         timer = battleLen;
         state = "battle";
-        var sum = betSum();
-        client.say('#chil_ttv', `${sum[0]} credits on red and ${sum[1]} credits on blue!`);
         client.say('#chil_ttv', `BATTLE BEGIN`);
         game.startBattle();
       } else if (timer == 15 || timer <= 3) {
@@ -521,7 +576,7 @@ function update() {
       } else if (timer == 60 || timer == 30 || timer == 10 || timer <= 3) {
         client.say('#chil_ttv', `${timer} seconds left until draw!`);
       }
-      if (timer < 238 && timer % 3) {
+      if (timer < 238 && timer % 3 == 0) {
         var winner = game.checkDone();
         if (winner != null) {
           done(winner);
@@ -533,6 +588,14 @@ function update() {
   }
   timer--;
 }
+
+function gcd_rec(a, b) {
+  if ( ! b) {
+      return a;
+  }
+
+  return gcd_rec(b, a % b);
+};
 
 state = "suggest";
 setInterval(update, 1000);

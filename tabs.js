@@ -1,6 +1,3 @@
-const fs = require('fs');
-const PNG = require('pngjs').PNG;
-const pixelmatch = require('pixelmatch');
 const robot = require('robotjs');
 
 function randPos(dict) {
@@ -83,7 +80,7 @@ exports.startBattle = function () {
 }
 
 exports.drawBattle = function (battle) {
-    robot.setMouseDelay(20);
+    robot.setMouseDelay(10);
     clearBattle();
     make(true, battle['red']);
     make(false, battle['blue']);
