@@ -529,7 +529,7 @@ async function onMessageHandler(target, context, msg, self) {
 var suggestLen = 31;
 var voteLen = 16;
 var betLen = 26;
-var battleLen = 241;
+var battleLen = 151;
 var timer = suggestLen;
 var state;
 
