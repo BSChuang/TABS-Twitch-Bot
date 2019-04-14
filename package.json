@@ -1,0 +1,25 @@
+{
+  "name": "tabs-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BSChuang/TABS-Twitch-Bot.git"
+  },
+  "author": "Ben Chuang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BSChuang/TABS-Twitch-Bot/issues"
+  },
+  "homepage": "https://github.com/BSChuang/TABS-Twitch-Bot#readme",
+  "dependencies": {
+    "https": "^1.0.0",
+    "mongodb": "^3.2.3",
+    "robotjs": "^0.5.1",
+    "tmi.js": "^1.4.2"
+  }
+}
