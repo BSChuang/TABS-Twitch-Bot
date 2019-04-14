@@ -70,8 +70,21 @@ function chooseSuggestion() {
   if (Object.keys(votes).length == 0) {
     winner = Object.keys(suggested)[Math.floor(Math.random() * Object.keys(suggested).length)];
   } else {
-    var max = -1;
+    var temp = {};
     for (var [key, value] of Object.entries(votes)) {
+      if (Object.keys(temp).includes(value)) {
+        temp[value] = temp[value] + 1;
+      } else {
+        temp[value] = 1;
+      }
+      if (value > max) {
+        max = value;
+        winner = key;
+      }
+    }
+
+    var max = -1;
+    for (var [key, value] of Object.entries(temp)) {
       if (value > max) {
         max = value;
         winner = key;
@@ -516,7 +529,7 @@ async function onMessageHandler(target, context, msg, self) {
 
 var suggestLen = 31;
 var voteLen = 16;
-var betLen = 16;
+var betLen = 26;
 var battleLen = 241;
 var timer = suggestLen;
 var state;
@@ -571,7 +584,7 @@ function update() {
         state = "battle";
         client.say('#chil_ttv', `Betting phase over! Entering battle phase! BATTLE START!`);
         game.startBattle();
-      } else if (timer == 15 || timer == 5) {
+      } else if (timer == 25 || timer == 15 || timer == 5) {
         client.say('#chil_ttv', `${timer} seconds left to bet!`);
       }
       break;
