@@ -77,10 +77,6 @@ function chooseSuggestion() {
       } else {
         temp[value] = 1;
       }
-      if (value > max) {
-        max = value;
-        winner = key;
-      }
     }
 
     var max = -1;
@@ -234,7 +230,8 @@ function createTeam(team) { //clubber:5,protector:3
 }
 
 function suggestionToString(name) {
-  console.log(suggested + ' ' + name);
+  console.log(suggested);
+  console.log(name);
   return `${dictToString(suggested[name]['red'])} vs. ${dictToString(suggested[name]['blue'])}`
 }
 
