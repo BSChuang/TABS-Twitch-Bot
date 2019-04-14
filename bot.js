@@ -234,6 +234,7 @@ function createTeam(team) { //clubber:5,protector:3
 }
 
 function suggestionToString(name) {
+  console.log(suggested + ' ' + name);
   return `${dictToString(suggested[name]['red'])} vs. ${dictToString(suggested[name]['blue'])}`
 }
 
