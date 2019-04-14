@@ -573,6 +573,7 @@ function update() {
         game.drawBattle(battle);
         client.say('#chil_ttv', `Voting phase over! Entering betting phase! Odds: ${odds[0]/gcd} red to ${odds[1]/gcd} blue.`)
         suggested = {};
+        votes = {};
       } else if (timer == 15 || timer == 5) {
         client.say('#chil_ttv', `${timer} seconds left to vote!`);
       }
