@@ -92,7 +92,7 @@ function chooseSuggestion() {
 }
 
 async function done(teamWinner) { // bet / win% 
-  client.say('#chil_ttv', `${teamWinner ? 'RED' : 'BLUE'} TEAM WINS`)
+  client.say('#chil_ttv', `${teamWinner ? 'RED' : 'BLUE'} TEAM WINS`);
 
   // Odds based
   /* odds = (teamWinner ? odds[0]/odds[1] : odds[1]/odds[0]);
@@ -133,6 +133,7 @@ async function done(teamWinner) { // bet / win%
   var reds = sum[0];
   var blues = sum[1];
   if (reds != 0 && blues != 0) {
+    var betters = Object.keys(bets);
     var winnerPool = teamWinner ? reds : blues;
     var loserPool = teamWinner ? blues : reds;
     for (var i = 0; i < betters.length; i++) {
@@ -238,7 +239,7 @@ function suggestionToString(name) {
 function dictToString(dict) {
   var str = "";
   Object.keys(dict).forEach(key => {
-    str += `${dict[key]} ${key}s, `
+    str += `${dict[key]} ${key}, `
   })
   return str.substring(0, str.length - 2)
 }
