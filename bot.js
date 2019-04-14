@@ -48,29 +48,35 @@ const units = {
   'longship': 1000
 }
 
-  function vote(name, votee) {
-    var response = "";
-    if (votee == null) {
-      Object.keys(suggested).forEach(suggester => {
-        response += `${suggester}: ${suggestionToString(suggester)}\n`;
-      })
+function vote(name, votee) {
+  var response = "";
+  if (votee == null) {
+    Object.keys(suggested).forEach(suggester => {
+      response += `${suggester}: ${suggestionToString(suggester)}\n`;
+    })
+  } else {
+    if (Object.keys(suggested).includes(votee)) {
+      votes[name] = votee;
+      response = `@${name}, you have voted for ${votee}.`;
     } else {
-      if (Object.keys(suggested).includes(votee)) {
-        votes[name] = votee;
-        response = `@${name}, you have voted for ${votee}.`;
-      } else {
-        response = `@${name}, invalid name.`;
-      }
+      response = `@${name}, invalid name.`;
     }
-    return response;
   }
+  return response;
+}
 
 function chooseSuggestion() {
   var winner;
   if (Object.keys(votes).length == 0) {
     winner = Object.keys(suggested)[Math.floor(Math.random() * Object.keys(suggested).length)];
   } else {
-    winner = Object.keys(votes).reduce((a, b) => obj[a] > obj[b] ? a : b);
+    var max = -1;
+    for (var [key, value] of Object.entries(votes)) {
+      if (value > max) {
+        max = value;
+        winner = key;
+      }
+    }
   }
   client.say("#chil_ttv", `${winner} won with ${suggestionToString(winner)}!`);
   return suggested[winner];
@@ -152,6 +158,7 @@ async function done(teamWinner) { // bet / win%
   } else {
     client.say('#chil_ttv', 'One team was not bet on. No credits given!')
   }
+  client.say('#chil_ttv', 'Battle phase over! Entering suggestion phase!')
   bets = {};
 
   getAllViewers(function (viewers) {
@@ -464,6 +471,7 @@ function onConnectedHandler(addr, port) {
 
 async function onMessageHandler(target, context, msg, self) {
   var username = context['username'];
+  username = username.toLowerCase();
   msg = msg.toLowerCase();
   const commandName = msg.trim().split(" ");
 
@@ -530,13 +538,12 @@ function update() {
             }
             suggested = temp;
           }
-          
         } else {
           timer = voteLen;
           state = "vote";
-          client.say('#chil_ttv', `${vote()}`)
+          client.say('#chil_ttv', `Suggestion phase over! Entering voting phase! ${vote()}`)
         }
-      } else if (timer == 30 || timer == 10 || timer <= 3) {
+      } else if (timer == 30 || timer == 10 || timer == 5) {
         var response = `${timer} seconds left to suggest a battle!`
         if (timer == 30) {
           response += ' (you can also suggest any time except the voting phase)'
@@ -552,9 +559,9 @@ function update() {
         odds = oddsBattle(battle);
         var gcd = gcd_rec(odds[0], odds[1]);
         game.drawBattle(battle);
-        client.say('#chil_ttv', `Odds: ${odds[0]/gcd} red to ${odds[1]/gcd} blue.`)
+        client.say('#chil_ttv', `Voting phase over! Entering betting phase! Odds: ${odds[0]/gcd} red to ${odds[1]/gcd} blue.`)
         suggested = {};
-      } else if (timer == 15 || timer <= 3) {
+      } else if (timer == 15 || timer == 5) {
         client.say('#chil_ttv', `${timer} seconds left to vote!`);
       }
       break;
@@ -562,9 +569,9 @@ function update() {
       if (timer <= 0) {
         timer = battleLen;
         state = "battle";
-        client.say('#chil_ttv', `BATTLE BEGIN`);
+        client.say('#chil_ttv', `Betting phase over! Entering battle phase! BATTLE START!`);
         game.startBattle();
-      } else if (timer == 15 || timer <= 3) {
+      } else if (timer == 15 || timer == 5) {
         client.say('#chil_ttv', `${timer} seconds left to bet!`);
       }
       break;
@@ -573,7 +580,7 @@ function update() {
         client.say('#chil_ttv', `Battle has ended in a draw!`);
         timer = suggestLen;
         state = "suggest";
-      } else if (timer == 60 || timer == 30 || timer == 10 || timer <= 3) {
+      } else if (timer == 60 || timer == 30 || timer == 10 || timer == 5) {
         client.say('#chil_ttv', `${timer} seconds left until draw!`);
       }
       if (timer < 238 && timer % 3 == 0) {
@@ -590,8 +597,8 @@ function update() {
 }
 
 function gcd_rec(a, b) {
-  if ( ! b) {
-      return a;
+  if (!b) {
+    return a;
   }
 
   return gcd_rec(b, a % b);
