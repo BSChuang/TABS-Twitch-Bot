@@ -73,7 +73,7 @@ async function done(teamWinner) { // bet / win%
       if ((teamWinner ? 'red' : 'blue') == teamBet) {
         var sum = Math.round(bet / odds);
         client.say('#chil_ttv', `!addpoints ${name} ${Math.ceil(sum/10)}`)
-        client.whisper(name, `You won ${sum} credits!`)
+        client.whisper(name, `You won ${sum} credits! You now have ${credits + sum + 10} credits.`)
         updateDb("users", {
           'name': name
         }, {
@@ -81,7 +81,7 @@ async function done(teamWinner) { // bet / win%
           'wins': betterInfo[0]['wins'] + 1
         })
       } else {
-        client.whisper(name, `You lost ${bet} credits.`)
+        client.whisper(name, `You lost ${bet} credits. You now have ${credits - bet + 10} credits.`)
         updateDb("users", {
           'name': name
         }, {
@@ -116,7 +116,7 @@ async function done(teamWinner) { // bet / win%
             'credits': credits + sum,
             'wins': betterInfo[0]['wins'] + 1
           })
-          client.whisper(name, `You won ${sum} credits!`)
+          client.whisper(name, `You won ${sum} credits! You now have ${credits + sum + 10} credits.`)
         } else {
           updateDb("users", {
             'name': name
@@ -124,7 +124,7 @@ async function done(teamWinner) { // bet / win%
             'credits': credits - bet,
             'losses': betterInfo[0]['losses'] + 1
           });
-          client.whisper(name, `You lost ${bet} credits.`)
+          client.whisper(name, `You lost ${bet} credits. You now have ${credits - bet + 10} credits.`)
         }
       }
       client.say('#chil_ttv', `Credits distributed!`)
