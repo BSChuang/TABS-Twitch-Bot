@@ -9,12 +9,13 @@ var bets = {};
 var suggested = {};
 var votes = {};
 var odds;
+var suggester;
 
 function vote(name, votee) {
   var response = "";
   if (votee == null) {
     Object.keys(suggested).forEach(suggester => {
-      response += `${suggester}: ${suggestionToString(suggester)}\n`;
+      response += `${suggester}: ${suggestionToString(suggester)} | `;
     })
   } else {
     if (Object.keys(suggested).includes(votee)) {
@@ -50,54 +51,17 @@ function chooseSuggestion() {
     }
   }
   client.say("#chil_ttv", `${winner} won with ${suggestionToString(winner)}!`);
+  suggester = winner;
   return suggested[winner];
 }
 
 async function done(teamWinner) { // bet / win% 
   client.say('#chil_ttv', `${teamWinner ? 'RED' : 'BLUE'} TEAM WINS`);
 
-  // Odds based
-  /* odds = (teamWinner ? odds[0]/odds[1] : odds[1]/odds[0]);
-  var betters = Object.keys(bets);
-  for (var i = 0; i < betters.length; i++) {
-    var name = betters[i];
-    var bet = bets[name]['bet'];
-    var teamBet = bets[name]['team'];
-    var betterInfo = await readFromDb("users", {
-      'name': name
-    });
-    var credits = betterInfo[0]['credits'];
-    console.log(teamBet);
-    if ((teamWinner ? 'red' : 'blue') == teamBet) {
-      console.log(odds);
-      var sum = bet / odds;
-      client.say('#chil_ttv', `!addpoints ${name} ${Math.ceil(sum/10)}`)
-      client.whisper(name, `You won ${sum} credits!`)
-      updateDb("users", {
-        'name': name
-      }, {
-        'credits': credits + sum,
-        'wins': betterInfo[0]['wins'] + 1
-      })
-    } else {
-      client.whisper(name, `You lost ${bet} credits.`)
-      updateDb("users", {
-        'name': name
-      }, {
-        'credits': credits - bet,
-        'losses': betterInfo[0]['losses'] + 1
-      });
-    }
-  } */
-
-  // Pool based
-  var sum = betSum();
-  var reds = sum[0];
-  var blues = sum[1];
-  if (reds != 0 && blues != 0) {
+  if (suggester == 'chil_ttv') {
+    // Odds based
+    odds = (teamWinner ? odds[0] / odds[1] : odds[1] / odds[0]);
     var betters = Object.keys(bets);
-    var winnerPool = teamWinner ? reds : blues;
-    var loserPool = teamWinner ? blues : reds;
     for (var i = 0; i < betters.length; i++) {
       var name = betters[i];
       var bet = bets[name]['bet'];
@@ -106,30 +70,69 @@ async function done(teamWinner) { // bet / win%
         'name': name
       });
       var credits = betterInfo[0]['credits'];
-      if (teamBet == (teamWinner ? 'red' : 'blue')) {
-        var sum = bet / winnerPool * loserPool;
+      if ((teamWinner ? 'red' : 'blue') == teamBet) {
+        var sum = bet / odds;
         client.say('#chil_ttv', `!addpoints ${name} ${Math.ceil(sum/10)}`)
+        client.whisper(name, `You won ${sum} credits!`)
         updateDb("users", {
           'name': name
         }, {
           'credits': credits + sum,
           'wins': betterInfo[0]['wins'] + 1
         })
-        client.whisper(name, `You won ${sum} credits!`)
       } else {
+        client.whisper(name, `You lost ${bet} credits.`)
         updateDb("users", {
           'name': name
         }, {
           'credits': credits - bet,
           'losses': betterInfo[0]['losses'] + 1
         });
-        client.whisper(name, `You lost ${bet} credits.`)
       }
     }
-    client.say('#chil_ttv', `Credits distributed!`)
   } else {
-    client.say('#chil_ttv', 'One team was not bet on. No credits given!')
+    // Pool based
+    var sum = betSum();
+    var reds = sum[0];
+    var blues = sum[1];
+    if (reds != 0 && blues != 0) {
+      var betters = Object.keys(bets);
+      var winnerPool = teamWinner ? reds : blues;
+      var loserPool = teamWinner ? blues : reds;
+      for (var i = 0; i < betters.length; i++) {
+        var name = betters[i];
+        var bet = bets[name]['bet'];
+        var teamBet = bets[name]['team'];
+        var betterInfo = await readFromDb("users", {
+          'name': name
+        });
+        var credits = betterInfo[0]['credits'];
+        if (teamBet == (teamWinner ? 'red' : 'blue')) {
+          var sum = bet / winnerPool * loserPool;
+          client.say('#chil_ttv', `!addpoints ${name} ${Math.ceil(sum/10)}`)
+          updateDb("users", {
+            'name': name
+          }, {
+            'credits': credits + sum,
+            'wins': betterInfo[0]['wins'] + 1
+          })
+          client.whisper(name, `You won ${sum} credits!`)
+        } else {
+          updateDb("users", {
+            'name': name
+          }, {
+            'credits': credits - bet,
+            'losses': betterInfo[0]['losses'] + 1
+          });
+          client.whisper(name, `You lost ${bet} credits.`)
+        }
+      }
+      client.say('#chil_ttv', `Credits distributed!`)
+    } else {
+      client.say('#chil_ttv', 'One team was not bet on. No credits given!')
+    }
   }
+
   client.say('#chil_ttv', 'Battle phase over! Entering suggestion phase!')
   bets = {};
 
@@ -193,8 +196,6 @@ function createTeam(team) { //clubber:5,protector:3
 }
 
 function suggestionToString(name) {
-  console.log(suggested);
-  console.log(name);
   return `${dictToString(suggested[name]['red'])} vs. ${dictToString(suggested[name]['blue'])}`
 }
 
@@ -489,7 +490,7 @@ async function onMessageHandler(target, context, msg, self) {
   }
 }
 
-var suggestLen = 1;
+var suggestLen = 31;
 var voteLen = 16;
 var betLen = 26;
 var battleLen = 151;
@@ -500,16 +501,14 @@ function update() {
   switch (state) {
     case "suggest":
       if (timer <= 0) {
+        var battle = game.randomBattle();
         if (Object.keys(suggested).length == 0) {
           timer = betLen;
           state = "bet";
-          var battle = game.randomBattle();
-          console.log(battle);
           odds = oddsBattle(battle);
           var gcd = gcd_rec(odds[0], odds[1]);
           game.drawBattle(battle);
-          suggested = {};
-          votes = {};
+          suggester = 'chil_ttv';
           client.say('#chil_ttv', `No suggestions given! Creating ${dictToString(battle['red'])} vs ${dictToString(battle['blue'])}! Entering betting phase! Odds: ${odds[0]/gcd} red to ${odds[1]/gcd} blue.`);
         } else {
           if (Object.keys(suggested).length > 5) {
@@ -522,6 +521,7 @@ function update() {
             }
             suggested = temp;
           }
+          suggested['chil_ttv'] = battle;
           timer = voteLen;
           state = "vote";
           client.say('#chil_ttv', `Suggestion phase over! Entering voting phase! ${vote()}`)
