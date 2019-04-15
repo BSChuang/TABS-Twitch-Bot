@@ -71,7 +71,7 @@ async function done(teamWinner) { // bet / win%
       });
       var credits = betterInfo[0]['credits'];
       if ((teamWinner ? 'red' : 'blue') == teamBet) {
-        var sum = bet / odds;
+        var sum = Math.round(bet / odds);
         client.say('#chil_ttv', `!addpoints ${name} ${Math.ceil(sum/10)}`)
         client.whisper(name, `You won ${sum} credits!`)
         updateDb("users", {
@@ -108,7 +108,7 @@ async function done(teamWinner) { // bet / win%
         });
         var credits = betterInfo[0]['credits'];
         if (teamBet == (teamWinner ? 'red' : 'blue')) {
-          var sum = bet / winnerPool * loserPool;
+          var sum = Math.round(bet / winnerPool * loserPool);
           client.say('#chil_ttv', `!addpoints ${name} ${Math.ceil(sum/10)}`)
           updateDb("users", {
             'name': name
