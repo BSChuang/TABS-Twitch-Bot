@@ -10,44 +10,6 @@ var suggested = {};
 var votes = {};
 var odds;
 
-const units = {
-  'clubber': 60,
-  'protector': 80,
-  'spear_thrower': 120,
-  'stoner': 160,
-  'bone_mage': 300,
-  'chieftain': 400,
-  'mammoth': 2230,
-  'halfling': 60,
-  'farmer': 80,
-  'hay_baler': 140,
-  'potionseller': 240,
-  'harvester': 490,
-  'wheelbarrow': 1000,
-  'scarecrow': 1200,
-  'bard': 60,
-  'squire': 100,
-  'archer': 140,
-  'priest': 180,
-  'knight': 900,
-  'catapult': 1050,
-  'the_king': 1400,
-  'sarissa': 90,
-  'shield_bearer': 100,
-  'hoplite': 180,
-  'snake_archer': 340,
-  'ballista': 950,
-  'minotaur': 1520,
-  'zeus': 2000,
-  'headbutter': 90,
-  'ice_archer': 160,
-  'brawler': 220,
-  'berserker': 240,
-  'valkyrie': 500,
-  'jarl': 850,
-  'longship': 1000
-}
-
 function vote(name, votee) {
   var response = "";
   if (votee == null) {
@@ -218,7 +180,7 @@ function createTeam(team) { //clubber:5,protector:3
   var total = 0;
   for (var i = 0; i < arr.length; i++) {
     var split = arr[i].split(":");
-    if (!Object.keys(units).includes(split[0]) || isNaN(split[1]) || parseInt(split[1]) < 1 || parseInt(split[1]) > 100) {
+    if (!Object.keys(game.getUnits()).includes(split[0]) || isNaN(split[1]) || parseInt(split[1]) < 1 || parseInt(split[1]) > 100) {
       return null;
     }
     dict[split[0]] = parseInt(split[1]);
@@ -309,6 +271,7 @@ async function bet(name, bet, team) {
 }
 
 function oddsBattle(battle) {
+  var units = game.getUnits();
   var redOdds = 0;
   var blueOdds = 0;
   Object.keys(battle['red']).forEach(unit => {
@@ -526,7 +489,7 @@ async function onMessageHandler(target, context, msg, self) {
   }
 }
 
-var suggestLen = 31;
+var suggestLen = 1;
 var voteLen = 16;
 var betLen = 26;
 var battleLen = 151;
@@ -538,8 +501,17 @@ function update() {
     case "suggest":
       if (timer <= 0) {
         if (Object.keys(suggested).length == 0) {
-          timer = suggestLen;
-          client.say('#chil_ttv', `No suggestions given! Restarting suggestion phase.`);
+          timer = betLen;
+          state = "bet";
+          var battle = game.randomBattle();
+          console.log(battle);
+          odds = oddsBattle(battle);
+          var gcd = gcd_rec(odds[0], odds[1]);
+          game.drawBattle(battle);
+          suggested = {};
+          votes = {};
+          client.say('#chil_ttv', `No suggestions given! Creating ${dictToString(battle['red'])} vs ${dictToString(battle['blue'])}! Entering betting phase! Odds: ${odds[0]/gcd} red to ${odds[1]/gcd} blue.`);
+        } else {
           if (Object.keys(suggested).length > 5) {
             var temp = {};
             for (var i = 0; i < 5; i++) {
@@ -550,7 +522,6 @@ function update() {
             }
             suggested = temp;
           }
-        } else {
           timer = voteLen;
           state = "vote";
           client.say('#chil_ttv', `Suggestion phase over! Entering voting phase! ${vote()}`)
@@ -571,9 +542,9 @@ function update() {
         odds = oddsBattle(battle);
         var gcd = gcd_rec(odds[0], odds[1]);
         game.drawBattle(battle);
-        client.say('#chil_ttv', `Voting phase over! Entering betting phase! Odds: ${odds[0]/gcd} red to ${odds[1]/gcd} blue.`)
         suggested = {};
         votes = {};
+        client.say('#chil_ttv', `Voting phase over! Entering betting phase! Odds: ${odds[0]/gcd} red to ${odds[1]/gcd} blue.`)
       } else if (timer == 15 || timer == 5) {
         client.say('#chil_ttv', `${timer} seconds left to vote!`);
       }
@@ -584,7 +555,7 @@ function update() {
         state = "battle";
         client.say('#chil_ttv', `Betting phase over! Entering battle phase! BATTLE START!`);
         game.startBattle();
-      } else if (timer == 25 || timer == 15 || timer == 5) {
+      } else if (timer == 25 || timer == 10 || timer == 5) {
         client.say('#chil_ttv', `${timer} seconds left to bet!`);
       }
       break;
