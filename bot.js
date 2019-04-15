@@ -10,6 +10,7 @@ var suggested = {};
 var votes = {};
 var odds;
 var suggester;
+var monclient;
 
 function vote(name, votee) {
   var response = "";
@@ -321,69 +322,43 @@ async function addCredits(name, credits) {
 }
 
 function writeToDb(coll, dict) {
-  MongoClient.connect(uri, function (err, monclient) {
+  monclient.db("TABS").collection(coll).insertOne(dict, function (err, res) {
     if (err) {
-      console.log('Error occurred while connecting to MongoDB Atlas...\n', err);
-    } else {
-      monclient.db("TABS").collection(coll).insertOne(dict, function (err, res) {
-        if (err) {
-          console.log('Error occurred while making account\n', err);
-        }
-      })
-      monclient.close();
+      console.log('Error occurred while making account\n', err);
     }
-  });
+  })
 }
 
 function updateDb(coll, doc, dict) {
-  MongoClient.connect(uri, function (err, monclient) {
+  monclient.db("TABS").collection(coll).updateOne(doc, {
+    $set: dict
+  }, function (err, res) {
     if (err) {
-      console.log('Error occurred while connecting to MongoDB Atlas...\n', err);
-    } else {
-      monclient.db("TABS").collection(coll).updateOne(doc, {
-        $set: dict
-      }, function (err, res) {
-        if (err) {
-          console.log('Error occurred while making account\n', err);
-        }
-      });
-      monclient.close();
-    }
-  });
-}
-
-async function updateWrite(coll, doc, dict) {
-  MongoClient.connect(uri, function (err, monclient) {
-    if (err) {
-      console.log('Error occurred while connecting to MongoDB Atlas...\n', err);
-    } else {
-      monclient.db("TABS").collection(coll).updateOne(doc, {
-        $set: dict
-      }, {
-        upsert: true
-      }, function (err, res) {
-        if (err) {
-          console.log('Error occurred while making account\n', err);
-        }
-      });
-      monclient.close();
+      console.log('Error occurred while making account\n', err);
     }
   });
 }
 
 async function readFromDb(coll, dict) {
   return new Promise(resolve => {
-    MongoClient.connect(uri, function (err, monclient) {
+    monclient.db("TABS").collection(coll).find(dict).toArray(function (err2, res) {
+      if (err2) {
+        console.log('Error occurred while making account\n', err2);
+      } else {
+        resolve(res);
+      }
+    })
+  })
+}
+
+function mongoConnect() {
+  return new Promise(resolve => {
+    MongoClient.connect(uri, function (err, client) {
       if (err) {
         console.log('Error occurred while connecting to MongoDB Atlas...\n', err);
       } else {
-        monclient.db("TABS").collection(coll).find(dict).toArray(function (err2, res) {
-          if (err2) {
-            console.log('Error occurred while making account\n', err2);
-          } else {
-            resolve(res);
-          }
-        })
+        monclient = client;
+        resolve();
       }
     });
   })
@@ -435,6 +410,7 @@ client.on('connected', onConnectedHandler);
 
 // Connect to Twitch:
 client.connect();
+mongoConnect();
 
 client.on('connected', (address, port) => {
   //client.action('chil_ttv', 'hello');
