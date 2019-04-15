@@ -157,6 +157,10 @@ function make(teamBool, team) {
 
 exports.startBattle = function () {
     moveClick(960, 40);
+    robot.setKeyboardDelay(2000);
+    robot.keyToggle('w', 'down');
+    robot.keyToggle('w', 'up');
+
 }
 
 exports.drawBattle = function (battle) {
