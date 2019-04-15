@@ -157,7 +157,7 @@ function make(teamBool, team) {
 
 exports.startBattle = function () {
     moveClick(960, 40);
-    robot.setKeyboardDelay(2000);
+    robot.setKeyboardDelay(4000);
     robot.keyToggle('w', 'down');
     robot.keyToggle('w', 'up');
 
@@ -253,7 +253,6 @@ function getPos() {
 function update() {
     console.log(checkDone());
 }
-
 //drawBattle();
 //setInterval(getPos, 500);
 //setInterval(update, 3000);
