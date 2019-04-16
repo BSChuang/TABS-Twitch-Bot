@@ -35,14 +35,35 @@ function getRandomColor() {
   return '#' + Math.floor(Math.random() * 16777215).toString(16);
 }
 
-function unitsToSelect(arr) {
-  $('#redUnit1').empty();
-  $.each(arr, function(val) {
-    $('#redUnit1').append($("<option></option>").atr("value", value).text(key));
+function unitsToSelect(index, arr) {
+  $('#redUnit' + index).empty();
+  arr.forEach(unit => {
+    $('#redUnit' + index).append($('<option>', {
+      value: unit,
+      text: unit
+    }));
   })
 }
 
-let types = {
+function format() {
+  var formatted = "!suggest ";
+  
+  for (var i = 0; i < 5; i++) {
+    var unit = $('#redUnit' + i).val();
+    var count = $('#redCount' + i).val();
+    if (unit != null) {
+      formatted += `${unit}:${count},`;
+    }
+  }
+  $('#formatted').html(`${formatted.substring(0, formatted.length - 1)}`);
+}
+
+let teams = ['red', 'blue'];
+
+let types = ['None', 'Stone Age', 'Farmer', 'Medieval', 'Viking', 'Greece'];
+
+let typeUnits = {
+  'None': [],
   'Stone Age': ['clubber', 'protector', 'spear_thrower', 'stoner', 'bone_mage', 'chieftain', 'mammoth'],
   'Farmer': ['halfling', 'farmer', 'hay_baler', 'potionseller', 'harvester', 'wheelbarrow', 'scarecrow'],
   'Medieval': ['bard', 'squire', 'archer', 'priest', 'knight', 'catapult', 'the_king'],
@@ -51,15 +72,49 @@ let types = {
 }
 
 $(function () {
-  $('#cycle').prop('disabled', false);
+  teams.forEach(team => {
+    for (var i = 0; i < 5; i++) {
+      types.forEach(type => {
+        $(`#${team}Type${i}`).append($('<option>', {
+          value: type,
+          text: type
+        }));
+      })
 
-  $('#redType1').change(function () {
-    var type = "";
-    $('#redType1 option:selected').each(function() {
-      type += $(this).text();
-    });
+      for (var j = 1; j < 101; j++) {
+        $(`#${team}Count${i}`).append($('<option>', {
+          value: j,
+          text: j
+        }));
+      }
+    }
+  })
 
-    unitsToSelect(types[type]);
-    $("#formatted").html(str);
+  var idDict = {
+    'redTypes': "",
+    'redUnitsCounts': "",
+    'blueTypes': "",
+    'blueUnitsCounts': ""
+  };
+  teams.forEach(team => {
+    for (var i = 0; i < 5; i++) {
+      idDict[`${team}Types`] += `#${team}Type${i},`;
+      idDict[`${team}UnitsCounts`] += `#${team}Unit${i},`;
+      idDict[`${team}UnitsCounts`] += `#${team}Count${i},`;
+    }
+    idDict[`${team}Types`] = idDict[`${team}Types`].substring(0, idDict[`${team}Types`].length - 1);
+    idDict[`${team}UnitsCounts`] = idDict[`${team}UnitsCounts`].substring(0, idDict[`${team}UnitsCounts`].length - 1);
+  })
+  
+  $(`${idDict['redTypes']},${idDict['blueTypes']}`).change(function () {
+    var type = this.value;
+    var index = this.id.slice(-1);
+
+    unitsToSelect(index, typeUnits[type]);
+    format();
   });
+
+  $(idDict['redUnitsCounts']).change(function () {
+    format();
+  })
 });
