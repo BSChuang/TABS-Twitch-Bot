@@ -21,42 +21,8 @@ twitch.onAuthorized(function (auth) {
   token = auth.token;
   tuid = auth.userId;
 
-  // enable the button
-  $('#cycle').removeAttr('disabled');
-
   setAuth(token);
 });
-
-function updateBlock(hex) {
-  $('#color').css('background-color', hex);
-}
-
-function getRandomColor() {
-  return '#' + Math.floor(Math.random() * 16777215).toString(16);
-}
-
-function unitsToSelect(index, arr) {
-  $('#redUnit' + index).empty();
-  arr.forEach(unit => {
-    $('#redUnit' + index).append($('<option>', {
-      value: unit,
-      text: unit
-    }));
-  })
-}
-
-function format() {
-  var formatted = "!suggest ";
-  
-  for (var i = 0; i < 5; i++) {
-    var unit = $('#redUnit' + i).val();
-    var count = $('#redCount' + i).val();
-    if (unit != null) {
-      formatted += `${unit}:${count},`;
-    }
-  }
-  $('#formatted').html(`${formatted.substring(0, formatted.length - 1)}`);
-}
 
 let teams = ['red', 'blue'];
 
@@ -71,9 +37,56 @@ let typeUnits = {
   'Greece': ['headbutter', 'ice_archer', 'brawler', 'berserker', 'valkyrie', 'jarl', 'longship']
 }
 
+function unitsToSelect(team, index, arr) {
+  $(`#${team}Unit` + index).empty();
+  arr.forEach(unit => {
+    $(`#${team}Unit` + index).append($('<option>', {
+      value: unit,
+      text: unit
+    }));
+  })
+}
+
+function format() {
+  var formatted = "!suggest ";
+  var above100 = false;
+  teams.forEach(team => {
+    var total = 0;
+    for (var i = 0; i < 4; i++) {
+      var unit = $(`#${team}Unit` + i).val();
+      var count = $(`#${team}Count` + i).val();
+      if (unit != null) {
+        formatted += `${unit}:${count},`;
+        total += parseInt(count);
+        if (total > 100) {
+          above100 = true;
+        }
+      }
+    }
+    formatted = `${formatted.substring(0, formatted.length - 1)} `;
+  })
+  formatted = `${formatted.substring(0, formatted.length - 1)}`;
+  if (above100) {
+    log("Total units on a side cannot exceed 100!");
+  }
+
+  $('#formatted').val(formatted);
+}
+
+function log(string) {
+  $('#log').html(string);
+}
+
+function copy() {
+  var copyText = document.getElementById("formatted");
+  copyText.select();
+  document.execCommand("copy");
+  log('Copied!');
+}
+
 $(function () {
   teams.forEach(team => {
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 4; i++) {
       types.forEach(type => {
         $(`#${team}Type${i}`).append($('<option>', {
           value: type,
@@ -97,7 +110,7 @@ $(function () {
     'blueUnitsCounts': ""
   };
   teams.forEach(team => {
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 4; i++) {
       idDict[`${team}Types`] += `#${team}Type${i},`;
       idDict[`${team}UnitsCounts`] += `#${team}Unit${i},`;
       idDict[`${team}UnitsCounts`] += `#${team}Count${i},`;
@@ -109,12 +122,16 @@ $(function () {
   $(`${idDict['redTypes']},${idDict['blueTypes']}`).change(function () {
     var type = this.value;
     var index = this.id.slice(-1);
-
-    unitsToSelect(index, typeUnits[type]);
+    var team = this.id.slice(0,1) == 'r' ? 'red' : 'blue';
+    unitsToSelect(team, index, typeUnits[type]);
     format();
   });
 
-  $(idDict['redUnitsCounts']).change(function () {
+  $(`${idDict['redUnitsCounts']},${idDict['blueUnitsCounts']}`).change(function () {
     format();
+  })
+
+  $('#copy').click(function() {
+    copy();
   })
 });

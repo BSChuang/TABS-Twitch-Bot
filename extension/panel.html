@@ -2,7 +2,10 @@
 <html>
 
 <head>
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src *; style-src 'self' http://* 'unsafe-inline'; script-src 'self' http://* 'unsafe-inline' 'unsafe-eval'" />
     <title>TABS Bet Extension</title>
+    <link rel="stylesheet" href="bootstrap.min.css" type="text/css"">
     <link rel="stylesheet" href="viewer.css" type="text/css">
 </head>
 
@@ -11,11 +14,13 @@
     <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
     <script src="https://localhost.rig.twitch.tv:3000/twitch-ext.js"></script>
 
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <h2>Tabs Battle Builder!</h2>
+    <script src="jquery-3.4.0.slim.min.js"></script>
+    <script src="bootstrap.min.js"></script>
 
-    <p>Build Red:</p>
+    <p style="font-size:80%">1) Build battle using dropdowns<br>2) Press copy<br>3) Paste into chat during suggestion
+        phase<br>4) Remember to
+        vote!</p>
+    <p2 style="color:#ff3333"><b>Red team:</b></p2>
     <div>
         <select id="redType0">
         </select>
@@ -48,17 +53,8 @@
         <select id="redCount3">
         </select>
     </div>
-    <div>
-        <select id="redType4">
-        </select>
-        <select id="redUnit4">
-        </select>
-        <select id="redCount4">
-        </select>
-    </div>
 
-
-    <p>Build Blue:</p>
+    <p2 style="color:#4d94ff"><b>Blue team:</b></p2>
     <div>
         <select id="blueType0">
         </select>
@@ -91,18 +87,14 @@
         <select id="blueCount3">
         </select>
     </div>
-    <div>
-        <select id="blueType4">
-        </select>
-        <select id="blueUnit4">
-        </select>
-        <select id="blueCount4">
-        </select>
-    </div>
-    <div>
+    <br>
+    <div style="text-align:center">
+        <input type="text" class="form-control" id="formatted" value="" readonly />
         <p id="formatted"> </p>
+        <input type="button" class="btn btn-secondary" id="copy" value="Copy" />
     </div>
+    <p id="log"></p>
     <script src="viewer.js"></script>
-</body>
+    </body>
 
 </html>

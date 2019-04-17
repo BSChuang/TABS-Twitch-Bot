@@ -1,12 +1,14 @@
 {
-  "backendCommand": "node backend -c \"7grza2ksbc58rd4ost1lzdceavokxb\" -s \"knA2VpAe9u/lLys7V/6bseGrRhQ2RmZWHihxW6XBAlo=\" -o \"93561375\"",
-  "backendFolderName": "extensions-hello-world\\services",
+  "allowHttpBackend": true,
+  "backendCommand": "",
+  "backendFolderName": "",
   "extensionViews": [
     {
       "id": "1",
-      "label": "com",
+      "label": "Panel",
       "channelId": "93561375",
-      "type": "component",
+      "displayChannelName": "chil_ttv",
+      "type": "panel",
       "features": {
         "isChatEnabled": true
       },
@@ -15,8 +17,8 @@
       "mode": "viewer",
       "isPopout": false,
       "role": "Broadcaster",
-      "x": "0",
-      "y": "0",
+      "x": 0,
+      "y": 0,
       "orientation": "Portrait",
       "frameSize": {
         "width": 640,
@@ -24,10 +26,8 @@
       }
     }
   ],
-  "frontendCommand": "",
-  "frontendFolderName": "C:\\Users\\Ben Chuang\\Desktop\\tabs\\extension",
   "manifest": {
-    "anchor": "component",
+    "anchor": "panel",
     "assetUrls": [],
     "authorName": "Aurora Studios",
     "bitsEnabled": false,
@@ -43,7 +43,7 @@
     "installationCount": -42,
     "liveConfigUrl": "",
     "name": "TABS Betting",
-    "panelHeight": 0,
+    "panelHeight": 493,
     "privacyPolicyUrl": "",
     "requestIdentityLink": false,
     "requiredBroadcasterAbilities": [],
@@ -55,20 +55,26 @@
     "supportEmail": "ben10chuang@gmail.com",
     "vendorCode": "",
     "version": "0.0.1",
-    "viewerUrl": "",
+    "viewerUrl": "https://localhost:8080/panel.html",
     "viewerUrls": {
       "mobile": "https://localhost:8080/mobile.html",
+      "panel": "https://localhost:8080/panel.html",
       "component": "https://localhost:8080/video_component.html"
     },
     "views": {
       "mobile": {
         "viewerUrl": "https://localhost:8080/mobile.html"
       },
+      "panel": {
+        "viewerUrl": "https://localhost:8080/panel.html",
+        "height": 493,
+        "canLinkExternalContent": false
+      },
       "component": {
         "viewerUrl": "https://localhost:8080/video_component.html",
         "aspectWidth": 4000,
         "aspectHeight": 3000,
-        "size": 300,
+        "size": 0,
         "zoom": false,
         "zoomPixels": 0,
         "canLinkExternalContent": false
@@ -81,5 +87,7 @@
     "whitelistedConfigUrls": [],
     "whitelistedPanelUrls": []
   },
+  "frontendCommand": "",
+  "frontendFolderName": "C:\\Users\\Ben Chuang\\Desktop\\tabs\\extension",
   "name": "TABS Betting"
 }

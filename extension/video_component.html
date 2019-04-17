@@ -2,7 +2,10 @@
 <html>
 
 <head>
-    <title>Viewer Page</title>
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src *; style-src 'self' http://* 'unsafe-inline'; script-src 'self' http://* 'unsafe-inline' 'unsafe-eval'" />
+    <title>TABS Bet Extension</title>
+    <link rel="stylesheet" href="bootstrap.min.css" type="text/css"">
     <link rel="stylesheet" href="viewer.css" type="text/css">
 </head>
 
@@ -11,25 +14,87 @@
     <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
     <script src="https://localhost.rig.twitch.tv:3000/twitch-ext.js"></script>
 
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <h2>Hello, Wold!</h2>
+    <script src="jquery-3.4.0.slim.min.js"></script>
+    <script src="bootstrap.min.js"></script>
 
-    <p>Would you care to cycle a color?</p>
+    <p style="font-size:80%">1) Build battle using dropdowns<br>2) Press copy<br>3) Paste into chat during suggestion
+        phase<br>4) Remember to
+        vote!</p>
+    <p2 style="color:#ff3333"><b>Red team:</b></p2>
     <div>
-        <select>
-            <option value="volvo">Volvo</option>
-            <option value="saab">Saab</option>
-            <option value="mercedes">Mercedes</option>
-            <option value="audi">Audi</option>
+        <select id="redType0">
         </select>
-        <input type="button" id="cycle" value="Yes, I would" />
+        <select id="redUnit0">
+        </select>
+        <select id="redCount0">
+        </select>
     </div>
-    <div id="color-container">
-        <div id="color"></div>
+    <div>
+        <select id="redType1">
+        </select>
+        <select id="redUnit1">
+        </select>
+        <select id="redCount1">
+        </select>
     </div>
-    <div id="list"></div>
+    <div>
+        <select id="redType2">
+        </select>
+        <select id="redUnit2">
+        </select>
+        <select id="redCount2">
+        </select>
+    </div>
+    <div>
+        <select id="redType3">
+        </select>
+        <select id="redUnit3">
+        </select>
+        <select id="redCount3">
+        </select>
+    </div>
+
+    <p2 style="color:#4d94ff"><b>Blue team:</b></p2>
+    <div>
+        <select id="blueType0">
+        </select>
+        <select id="blueUnit0">
+        </select>
+        <select id="blueCount0">
+        </select>
+    </div>
+    <div>
+        <select id="blueType1">
+        </select>
+        <select id="blueUnit1">
+        </select>
+        <select id="blueCount1">
+        </select>
+    </div>
+    <div>
+        <select id="blueType2">
+        </select>
+        <select id="blueUnit2">
+        </select>
+        <select id="blueCount2">
+        </select>
+    </div>
+    <div>
+        <select id="blueType3">
+        </select>
+        <select id="blueUnit3">
+        </select>
+        <select id="blueCount3">
+        </select>
+    </div>
+    <br>
+    <div style="text-align:center">
+        <input type="text" class="form-control" id="formatted" value="" readonly />
+        <p id="formatted"> </p>
+        <input type="button" class="btn btn-secondary" id="copy" value="Copy" />
+    </div>
+    <p id="log"></p>
     <script src="viewer.js"></script>
-</body>
+    </body>
 
 </html>
